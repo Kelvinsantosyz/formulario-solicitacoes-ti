@@ -1,61 +1,56 @@
-# Sistema de Solicitações de TI
+function enviarEmailResposta(e) {
+    if (!e || !e.values) {
+        Logger.log("Erro: Evento 'e' não foi passado corretamente.");
+        return;
+    }
 
-Este projeto é uma implementação de um sistema de gerenciamento de solicitações de TI utilizando Google Apps Script. Ele permite que os usuários enviem solicitações por meio de um formulário do Google, e automaticamente envia um e-mail para o suporte de TI com os detalhes da solicitação.
+    var resposta = e.values;
+    var emailDestino = ""; // E-mail do suporte de TI
 
-## Funcionalidades
+    // Ajuste dos índices conforme a sua planilha
+    var dataHora = resposta[0];  
+    var titulo = resposta[1];  
+    var nome1 = resposta[2];  // Primeira ocorrência de "Nome completo"
+    var nome2 = resposta[3];  // Segunda ocorrência de "Nome completo"
+    var tipoSolicitacao = resposta[4];  
+    var localidade = resposta[5];  
+    var anyDesk = resposta[6];  // Disponibilize AnyDesk
+    var descricao = resposta[7];  // Descrição do problema
+    var emailUsuario = resposta[8]; // Endereço de e-mail do usuário
 
-- **Recepção de solicitações**: O sistema recebe as respostas do formulário do Google.
-- **Envio automático de e-mails**: As informações da solicitação são enviadas por e-mail para o suporte de TI.
-- **Registro de logs**: Os erros e eventos são registrados no Logger para monitoramento.
+    // Definição do nome (caso uma das colunas esteja vazia)
+    var nome = nome1 ? nome1 : nome2;
 
-## Pré-requisitos
+    // Criando o assunto e mensagem do e-mail
+    var assunto = "Nova Solicitação de TI - " + (titulo ? titulo : "Sem Título");
+    var mensagem = "📌 *Nova Solicitação de TI Recebida*\n\n";
+    mensagem += "📅 *Data:* " + dataHora + "\n";
+    mensagem += "👤 *Nome:* " + (nome ? nome : "Não informado") + "\n";
+    mensagem += "📝 *Tipo de Solicitação:* " + (tipoSolicitacao ? tipoSolicitacao : "Não informado") + "\n";
+    mensagem += "📍 *Localidade:* " + (localidade ? localidade : "Não informado") + "\n";
+    mensagem += "🖥️ *AnyDesk:* " + (anyDesk ? anyDesk : "Não informado") + "\n";  
+    mensagem += "💬 *Descrição:* " + (descricao ? descricao : "Não informado") + "\n";
+    mensagem += "✉️ *E-mail do Usuário:* " + (emailUsuario ? emailUsuario : "Não informado") + "\n";
 
-- Acesso ao Google Workspace (Google Drive, Google Sheets, Google Forms).
-- Conhecimento básico em Google Apps Script.
+    // Enviar e-mail apenas para o suporte de TI
+    MailApp.sendEmail(emailDestino, assunto, mensagem);
+}
 
-## Como Usar
+function ativarGatilho() {
+    var triggers = ScriptApp.getProjectTriggers();
 
-1. **Criar um Formulário do Google**:
-   - Crie um formulário que capture as seguintes informações:
-     - Data e Hora
-     - Título da Solicitação
-     - Nome Completo (pode ter duas entradas)
-     - Tipo de Solicitação
-     - Localidade
-     - AnyDesk (se aplicável)
-     - Descrição do Problema
-     - E-mail do Usuário
+    // Remover gatilhos antigos para evitar duplicação
+    triggers.forEach(trigger => {
+        if (trigger.getHandlerFunction() === "enviarEmailResposta") {
+            ScriptApp.deleteTrigger(trigger);
+        }
+    });
 
-2. **Criar uma Planilha do Google**:
-   - Conecte o formulário a uma planilha do Google onde as respostas serão registradas.
+    // Criar um novo gatilho para submissão do formulário
+    ScriptApp.newTrigger("enviarEmailResposta")
+        .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
+        .onFormSubmit()
+        .create();
 
-3. **Adicionar o Script**:
-   - Abra a planilha do Google.
-   - Vá para `Extensões > Apps Script`.
-   - Cole o código do script fornecido neste repositório.
-
-4. **Ativar o Gatilho**:
-   - Execute a função `ativarGatilho` para configurar um gatilho que irá executar o envio do e-mail quando uma nova resposta for submetida.
-
-5. **Testar**:
-   - Preencha o formulário e envie uma solicitação. Verifique o e-mail do suporte de TI para confirmar o recebimento da solicitação.
-
-## Estrutura do Código
-
-O código é dividido em duas funções principais:
-
-1. **`enviarEmailResposta(e)`**:
-   - Recebe o evento do formulário.
-   - Extrai os dados relevantes da resposta.
-   - Compõe e envia um e-mail com as informações da solicitação.
-
-2. **`ativarGatilho()`**:
-   - Configura um gatilho para ativar a função `enviarEmailResposta` sempre que um novo formulário for enviado.
-
-## Considerações Finais
-
-Sinta-se à vontade para modificar e expandir o sistema conforme suas necessidades. Este projeto pode ser aprimorado com funcionalidades adicionais, como integração com um sistema de gerenciamento de tickets ou relatórios analíticos.
-
-## Licença
-
-Este projeto é de código aberto. Sinta-se livre para usar, modificar e distribuir conforme necessário.
+    Logger.log("🔔 Gatilho ativado com sucesso!");
+}
