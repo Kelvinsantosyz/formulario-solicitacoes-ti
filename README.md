@@ -1,4 +1,4 @@
-# Sistema de Solicitações de TI
+# Formulario de Solicitações de TI
 
 Este projeto é uma implementação de um sistema de gerenciamento de solicitações de TI utilizando Google Apps Script. Ele permite que os usuários enviem solicitações por meio de um formulário do Google, e automaticamente envia um e-mail para o suporte de TI com os detalhes da solicitação.
 
